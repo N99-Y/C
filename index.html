@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบตรวจสอบงานและคะแนน</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Prompt', sans-serif; }
+        body { background-color: #dbeafe; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #333; }
+        
+        .app-container { 
+            width: 100%; 
+            max-width: 400px; 
+            background-color: #ffffff; 
+            position: relative; 
+            box-shadow: 0 4px 25px rgba(0,0,0,0.08); 
+            overflow: hidden; 
+        }
+
+        @media (min-width: 768px) { 
+            .app-container { 
+                zoom: 1.25; 
+                margin: 20px 0; 
+                border-radius: 24px; 
+            } 
+        }
+
+        .page { display: none !important; flex-direction: column; }
+        .page.active { display: flex !important; }
+
+        /* Hamburger Menu */
+        .hamburger-btn { position: absolute; top: 20px; left: 20px; font-size: 24px; cursor: pointer; color: #4a5568; z-index: 100; background: none; border: none; padding: 5px; }
+        
+        /* Dropdown Menu */
+        .menu-dropdown { display: none; position: absolute; top: 60px; left: 20px; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border-radius: 12px; padding: 10px; z-index: 999; min-width: 180px; }
+        .menu-dropdown button { background: none; border: none; padding: 10px 15px; font-size: 14px; width: 100%; text-align: left; cursor: pointer; border-radius: 8px; color: #2b6cb0; font-weight: 600; }
+        .menu-dropdown button:hover { background: #f3f6fc; }
+
+        /* Login Pages */
+        .login-wrapper { padding: 50px 30px; background: #ffffff; align-items: center; width: 100%; }
+        .icon-box { width: 80px; height: 80px; border-radius: 22px; display: flex; justify-content: center; align-items: center; font-size: 40px; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(43, 108, 176, 0.2); }
+        .icon-student { background: linear-gradient(135deg, #4da3ff 0%, #2b6cb0 100%); }
+        .icon-admin { background: linear-gradient(135deg, #f6ad55 0%, #dd6b20 100%); box-shadow: 0 10px 20px rgba(221, 107, 32, 0.2); }
+        
+        .login-title { text-align: center; margin-bottom: 25px; }
+        .login-title h1 { font-size: 18px; color: #1a202c; font-weight: 700; line-height: 1.4; }
+        .login-title p { font-size: 13px; color: #718096; margin-top: 5px; }
+
+        .form-group { width: 100%; margin-bottom: 15px; position: relative; text-align: left; }
+        .form-group label { display: block; font-size: 13px; margin-bottom: 6px; color: #4a5568; font-weight: 600; }
+        
+        /* สไตล์ช่องกรอกข้อมูล: พื้นหลังฟ้าอ่อน ขอบฟ้าจางๆ ตัวหนังสือ placeholder จาง */
+        .form-group input { 
+            width: 100%; 
+            padding: 14px 45px 14px 16px; /* เผื่อพื้นที่ด้านขวาให้รูปตา */
+            border: 1px solid #bfdbfe !important; 
+            border-radius: 12px; 
+            font-size: 15px; 
+            background-color: #f8fafc !important; 
+            color: #1e293b;
+            outline: none; 
+        }
+        
+        .form-group input::placeholder {
+            color: #94a3b8;
+            font-weight: 300;
+        }
+
+        .form-group input:focus {
+            border-color: #3b82f6 !important;
+            background-color: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* สไตล์ไอคอนรูปตา */
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 38px;
+            cursor: pointer;
+            font-size: 18px;
+            color: #94a3b8;
+            user-select: none;
+        }
+        .toggle-password:hover {
+            color: #4a5568;
+        }
+        
+        .btn-submit { width: 100%; padding: 14px; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .btn-student { background: linear-gradient(135deg, #4299e1 0%, #2b6cb0 100%); }
+        .btn-admin { background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); }
+
+        /* Dashboard Common */
+        .dashboard-wrapper { background-color: #f3f6fc; min-height: 100vh; padding-bottom: 30px; }
+        .header { color: white; padding: 25px 20px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; margin-bottom: 20px; position: relative; }
+        .header-student { background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%); }
+        .header-admin { background: linear-gradient(135deg, #dd6b20 100%, #c05621 100%); }
+        .btn-logout { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.15); color: white; border: 1px solid rgba(255, 255, 255, 0.3); padding: 5px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; z-index: 10; }
+        
+        .header h2 { font-size: 18px; margin: 5px 0 10px 0; padding-right: 70px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; margin-top: -25px; position: relative; z-index: 5; }
+        .stat-card { background: white; padding: 15px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .stat-card input { width: 60px; padding: 5px; border: 1px solid #ccc; border-radius: 5px; text-align: center; font-size: 16px; font-weight: bold; background: #fff !important; color: #333 !important; }
+        
+        /* Work List */
+        .work-list-section { padding: 20px; }
+        .work-card { background: white; border-radius: 15px; padding: 10px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+        .work-item { padding: 12px 0; border-bottom: 1px solid #edf2f7; display: flex; align-items: center; justify-content: space-between; }
+        .work-item-left { display: flex; align-items: center; flex: 1; }
+        .work-number { font-weight: 600; color: #4a5568; width: 45px; }
+        .work-name { color: #2d3748; font-size: 14px; flex: 1; cursor: pointer; padding-right: 10px; }
+        
+        /* Admin specific UI */
+        .admin-edit-hint { font-size: 11px; color: #ed8936; margin-bottom: 10px; text-align: center; }
+        .btn-delete { background: #fee2e2; color: #ef4444; border: none; width: 30px; height: 30px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-add { background: #dcfce7; color: #22c55e; border: none; width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        
+        .student-list-item { background: white; padding: 15px 20px; border-radius: 15px; margin: 0 20px 12px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- ================= 1. หน้า Login นักเรียน ================= -->
+        <div id="page-login-student" class="page active login-wrapper">
+            <button type="button" class="hamburger-btn" onclick="toggleMenu('menu-student')">☰</button>
+            <div class="menu-dropdown" id="menu-student">
+                <button type="button" onclick="switchToAdminLogin()">👨‍🏫 เข้าสู่ระบบ Admin</button>
+            </div>
+
+            <div class="icon-box icon-student">🎓</div>
+            <div class="login-title">
+                <h1>ระบบตรวจสอบงานและคะแนน</h1>
+                <p>สำหรับนักเรียน</p>
+            </div>
+            <form onsubmit="handleLogin(event, 'student')" style="width: 100%;">
+                <div class="form-group">
+                    <label>เลขประจำตัวนักเรียน</label>
+                    <input type="text" id="stu-user" placeholder="กรอกเลข 5 หลัก" required inputmode="numeric" oninput="validateNumber(this)">
+                </div>
+                <div class="form-group">
+                    <label>PIN 4 หลัก</label>
+                    <input type="password" id="stu-pass" placeholder="กรอก PIN 4 หลัก" required inputmode="numeric" oninput="validateNumber(this)">
+                    <span class="toggle-password" onclick="togglePasswordVisibility('stu-pass')">👁️</span>
+                </div>
+                <button type="submit" class="btn-submit btn-student">เข้าสู่ระบบ</button>
+            </form>
+        </div>
+
+        <!-- ================= 2. หน้า Login ครู (Admin) ================= -->
+        <div id="page-login-admin" class="page login-wrapper">
+            <button type="button" class="hamburger-btn" onclick="toggleMenu('menu-admin')">☰</button>
+            <div class="menu-dropdown" id="menu-admin">
+                <button type="button" onclick="switchToStudentLogin()">🎓 สลับเป็นหน้านักเรียน</button>
+            </div>
+
+            <div class="icon-box icon-admin">🔐</div>
+            <div class="login-title">
+                <h1>เข้าสู่ระบบจัดการ</h1>
+                <p>สำหรับครู (Admin)</p>
+            </div>
+            <form onsubmit="handleLogin(event, 'admin')" style="width: 100%;">
+                <div class="form-group">
+                    <label>เลขประจำตัวครู</label>
+                    <input type="text" id="adm-user" placeholder="กรอกเลข 5 หลัก" required inputmode="numeric" oninput="validateNumber(this)">
+                </div>
+                <div class="form-group">
+                    <label>รหัสผ่าน</label>
+                    <input type="password" id="adm-pass" placeholder="กรอก PIN 4 หลัก" required inputmode="numeric" oninput="validateNumber(this)">
+                    <span class="toggle-password" onclick="togglePasswordVisibility('adm-pass')">👁️</span>
+                </div>
+                <button type="submit" class="btn-submit btn-admin">เข้าสู่ระบบ Admin</button>
+            </form>
+        </div>
+
+        <!-- ================= 3. หน้า Dashboard นักเรียน ================= -->
+        <div id="page-dashboard-student" class="page dashboard-wrapper">
+            <div class="header header-student">
+                <button type="button" class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+                <p>สวัสดี 👋</p>
+                <h2 id="stu-name-display">กำลังโหลด...</h2>
+                <div class="sub-info" id="stu-info-display"></div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div style="width: 30px; height: 30px; border-radius: 8px; background: #e6fffa; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 8px;">✅</div>
+                    <p style="font-size: 11px; color: #718096;">งานที่ส่งแล้ว</p>
+                    <h3 id="stu-submitted-display" style="font-size: 16px;">0 งาน</h3>
+                </div>
+                <div class="stat-card">
+                    <div style="width: 30px; height: 30px; border-radius: 8px; background: #fff5f5; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-bottom: 8px;">📌</div>
+                    <p style="font-size: 11px; color: #718096;">งานค้างส่ง</p>
+                    <h3 style="color: #e53e3e; font-size: 16px;" id="stu-pending-display">0 งาน</h3>
+                </div>
+            </div>
+            <div class="work-list-section">
+                <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">📋 สถานะงานของฉัน</div>
+                <div class="work-card" id="stu-task-list"></div>
+            </div>
+        </div>
+
+        <!-- ================= 4. หน้า รายชื่อนักเรียน (Admin) ================= -->
+        <div id="page-admin-list" class="page dashboard-wrapper">
+            <div class="header header-admin">
+                <button type="button" class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+                <p>ระบบจัดการของครู</p>
+                <h2>รายชื่อนักเรียนทั้งหมด</h2>
+            </div>
+            <div id="admin-student-list"></div>
+        </div>
+
+        <!-- ================= 5. หน้า แก้ไขข้อมูลนักเรียน (Admin) ================= -->
+        <div id="page-admin-edit" class="page dashboard-wrapper">
+            <div class="header header-admin">
+                <button type="button" class="btn-logout" style="right: auto; left: 20px; top: 20px;" onclick="goToPage('page-admin-list', false)">⬅ กลับ</button>
+                <p style="margin-top: 25px;">โหมดแก้ไขข้อมูล</p>
+                <h2 id="adm-name-display">ชื่อนักเรียน</h2>
+            </div>
+            
+            <p class="admin-edit-hint">💡 แตะที่ชื่อรายละเอียดงาน เพื่อแก้ไขข้อความ</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <p style="font-size: 11px; color: #718096;">แก้ไขงานส่งแล้ว</p>
+                    <div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;">
+                        <input type="number" id="edit-submitted" onchange="updateStat('submitted', this.value)"> <span style="font-size: 13px; font-weight: bold;">งาน</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <p style="font-size: 11px; color: #718096;">แก้ไขงานค้างส่ง</p>
+                    <div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;">
+                        <input type="number" id="edit-pending" onchange="updateStat('pending', this.value)"> <span style="font-size: 13px; font-weight: bold; color: #e53e3e;">งาน</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="work-list-section">
+                <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">📋 แก้ไขรายการงาน (กด - เพื่อลบ)</div>
+                <div class="work-card" id="adm-task-list"></div>
+                <button type="button" class="btn-add" onclick="addTask()">➕ เพิ่มงานใหม่</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const defaultData = {
+            "26490": {
+                id: "26490",
+                pin: "9999",
+                name: "ด.ช.ณัฏฐ์วรัชญ์ มาดีประเสริฐ",
+                info: "ชั้น ม.1/14 • เลขที่ 6 • เลขประจำตัว 26490",
+                submitted: 3,
+                pending: 4,
+                tasks: [
+                    { w: "W1", text: "งานที่ 1 (รออัปเดตชื่อรายละเอียด)" },
+                    { w: "W2", text: "งานที่ 2 (รออัปเดตชื่อรายละเอียด)" },
+                    { w: "W3", text: "งานที่ 3 (รออัปเดตชื่อรายละเอียด)" },
+                    { w: "W4", text: "งานที่ 4 (รออัปเดตชื่อรายละเอียด)" },
+                    { w: "W5", text: "งานที่ 5 (รออัปเดตชื่อรายละเอียด)" },
+                    { w: "W6", text: "งานที่ 6 (รออัปเดตชื่อรายละเอียด)" },
+                    { w: "W7", text: "งานที่ 7 (รออัปเดตชื่อรายละเอียด)" }
+                ]
+            }
+        };
+
+        let schoolData;
+        try {
+            let saved = JSON.parse(localStorage.getItem('schoolAppData'));
+            if (saved && saved["26490"] && saved["26490"].tasks) {
+                schoolData = saved;
+            } else {
+                schoolData = defaultData;
+                localStorage.setItem('schoolAppData', JSON.stringify(defaultData));
+            }
+        } catch(e) {
+            schoolData = defaultData;
+            localStorage.setItem('schoolAppData', JSON.stringify(defaultData));
+        }
+
+        let currentEditingStudent = null; 
+
+        function saveData() {
+            localStorage.setItem('schoolAppData', JSON.stringify(schoolData));
+        }
+
+        function toggleMenu(menuId) {
+            const menu = document.getElementById(menuId);
+            if(menu.style.display === 'block') {
+                menu.style.display = 'none';
+            } else {
+                document.querySelectorAll('.menu-dropdown').forEach(m => m.style.display = 'none');
+                menu.style.display = 'block';
+            }
+        }
+
+        // ฟังก์ชันเปิด-ปิดตา (Toggle Password)
+        function togglePasswordVisibility(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+            } else {
+                passwordInput.type = 'password';
+            }
+        }
+
+        function switchToAdminLogin() {
+            document.getElementById('menu-student').style.display = 'none';
+            goToPage('page-login-admin', true);
+        }
+
+        function switchToStudentLogin() {
+            document.getElementById('menu-admin').style.display = 'none';
+            goToPage('page-login-student', true);
+        }
+
+        function goToPage(pageId, scrollToTop = false) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.menu-dropdown').forEach(m => m.style.display = 'none');
+            if (scrollToTop) {
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function validateNumber(input) { input.value = input.value.replace(/[^0-9]/g, ''); }
+
+        function logout() {
+            document.querySelectorAll('input').forEach(input => input.value = '');
+            // รีเซ็ต type ของ input รหัสผ่านให้กลับเป็นซ่อนดาว/จุด
+            document.getElementById('stu-pass').type = 'password';
+            document.getElementById('adm-pass').type = 'password';
+            currentEditingStudent = null;
+            goToPage('page-login-student', true);
+        }
+
+        function handleLogin(e, type) {
+            e.preventDefault();
+            if (type === 'student') {
+                const user = document.getElementById('stu-user').value;
+                const pass = document.getElementById('stu-pass').value;
+                
+                if (schoolData[user] && schoolData[user].pin === pass) {
+                    renderStudentDashboard(user);
+                    goToPage('page-dashboard-student', true);
+                } else {
+                    alert("เลขประจำตัวหรือรหัสผ่านนักเรียนไม่ถูกต้อง");
+                }
+            } else if (type === 'admin') {
+                const user = document.getElementById('adm-user').value;
+                const pass = document.getElementById('adm-pass').value;
+                
+                if (user === "11111" && pass === "1111") {
+                    renderAdminStudentList();
+                    goToPage('page-admin-list', true);
+                } else {
+                    alert("ข้อมูล Admin ไม่ถูกต้อง");
+                }
+            }
+        }
+
+        function renderStudentDashboard(studentId) {
+            const data = schoolData[studentId];
+            document.getElementById('stu-name-display').innerText = data.name;
+            document.getElementById('stu-info-display').innerText = data.info;
+            document.getElementById('stu-submitted-display').innerText = `${data.submitted} งาน`;
+            document.getElementById('stu-pending-display').innerText = `${data.pending} งาน`;
+
+            const listContainer = document.getElementById('stu-task-list');
+            listContainer.innerHTML = '';
+            
+            data.tasks.forEach(task => {
+                listContainer.innerHTML += `
+                    <div class="work-item">
+                        <div class="work-number">${task.w}</div>
+                        <div class="work-name">${task.text}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderAdminStudentList() {
+            const listContainer = document.getElementById('admin-student-list');
+            listContainer.innerHTML = '';
+            
+            for (const id in schoolData) {
+                const student = schoolData[id];
+                listContainer.innerHTML += `
+                    <div class="student-list-item" onclick="openAdminEdit('${id}')">
+                        <div>
+                            <div style="font-weight: bold; color: #1a202c;">${student.name}</div>
+                            <div style="font-size: 12px; color: #718096;">เลขประจำตัว: ${id}</div>
+                        </div>
+                        <div style="color: #2b6cb0;">✏️ แก้ไข ➔</div>
+                    </div>
+                `;
+            }
+        }
+
+        function openAdminEdit(studentId) {
+            currentEditingStudent = studentId;
+            const data = schoolData[studentId];
+            
+            document.getElementById('adm-name-display').innerText = data.name;
+            document.getElementById('edit-submitted').value = data.submitted;
+            document.getElementById('edit-pending').value = data.pending;
+            
+            renderAdminTaskList();
+            goToPage('page-admin-edit', true); 
+        }
+
+        function renderAdminTaskList() {
+            const data = schoolData[currentEditingStudent];
+            const listContainer = document.getElementById('adm-task-list');
+            listContainer.innerHTML = '';
+            
+            data.tasks.forEach((task, index) => {
+                listContainer.innerHTML += `
+                    <div class="work-item">
+                        <div class="work-item-left" onclick="editTaskText(${index})">
+                            <div class="work-number">${task.w}</div>
+                            <div class="work-name" style="text-decoration: underline dashed #ccc; color: #2b6cb0;">
+                                ${task.text}
+                            </div>
+                        </div>
+                        <button type="button" class="btn-delete" onclick="deleteTask(${index})">➖</button>
+                    </div>
+                `;
+            });
+        }
+
+        function updateStat(type, value) {
+            if(!currentEditingStudent) return;
+            schoolData[currentEditingStudent][type] = parseInt(value) || 0;
+            saveData();
+        }
+
+        function editTaskText(index) {
+            const data = schoolData[currentEditingStudent];
+            const oldText = data.tasks[index].text;
+            const newText = prompt(`แก้ไขชื่อ ${data.tasks[index].w}:`, oldText);
+            
+            if (newText !== null && newText.trim() !== "") {
+                data.tasks[index].text = newText;
+                saveData();
+                renderAdminTaskList(); 
+            }
+        }
+
+        function addTask() {
+            const data = schoolData[currentEditingStudent];
+            
+            let nextWNum = 1;
+            if (data.tasks.length > 0) {
+                const lastTaskW = data.tasks[data.tasks.length - 1].w; 
+                nextWNum = parseInt(lastTaskW.replace('W', '')) + 1;
+            }
+
+            data.tasks.push({
+                w: `W${nextWNum}`,
+                text: `งานที่ ${nextWNum} (รออัปเดตชื่อรายละเอียด)`
+            });
+            
+            saveData();
+            renderAdminTaskList(); 
+        }
+
+        function deleteTask(index) {
+            if(confirm("ยืนยันการลบงานนี้?")) {
+                schoolData[currentEditingStudent].tasks.splice(index, 1);
+                saveData();
+                renderAdminTaskList(); 
+            }
+        }
+    </script>
+</body>
+</html>
