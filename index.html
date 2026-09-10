@@ -50,10 +50,9 @@
         .form-group { width: 100%; margin-bottom: 15px; position: relative; text-align: left; }
         .form-group label { display: block; font-size: 13px; margin-bottom: 6px; color: #4a5568; font-weight: 600; }
         
-        /* สไตล์ช่องกรอกข้อมูล: พื้นหลังฟ้าอ่อน ขอบฟ้าจางๆ ตัวหนังสือ placeholder จาง */
         .form-group input { 
             width: 100%; 
-            padding: 14px 45px 14px 16px; /* เผื่อพื้นที่ด้านขวาให้รูปตา */
+            padding: 14px 45px 14px 16px; 
             border: 1px solid #bfdbfe !important; 
             border-radius: 12px; 
             font-size: 15px; 
@@ -73,7 +72,6 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        /* สไตล์ไอคอนรูปตา */
         .toggle-password {
             position: absolute;
             right: 15px;
@@ -113,7 +111,11 @@
         
         /* Admin specific UI */
         .admin-edit-hint { font-size: 11px; color: #ed8936; margin-bottom: 10px; text-align: center; }
-        .btn-delete { background: #fee2e2; color: #ef4444; border: none; width: 30px; height: 30px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .admin-actions { display: flex; gap: 6px; align-items: center; }
+        .btn-delete { background: #fee2e2; color: #ef4444; border: none; width: 30px; height: 30px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-check { background: #f1f5f9; color: #cbd5e1; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .btn-check.completed { background: #dcfce7; color: #22c55e; border-color: #22c55e; }
+        
         .btn-add { background: #dcfce7; color: #22c55e; border: none; width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 5px; }
         
         .student-list-item { background: white; padding: 15px 20px; border-radius: 15px; margin: 0 20px 12px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
@@ -218,7 +220,8 @@
                 <p style="margin-top: 25px;">โหมดแก้ไขข้อมูล</p>
                 <h2 id="adm-name-display">ชื่อนักเรียน</h2>
             </div>
-        
+            
+            <p class="admin-edit-hint">💡 แตะที่ชื่อรายละเอียดงาน เพื่อแก้ไขข้อความ</p>
 
             <div class="stats-grid">
                 <div class="stat-card">
@@ -236,7 +239,7 @@
             </div>
 
             <div class="work-list-section">
-                <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">📋 แก้ไขรายการงาน (กด - เพื่อลบ)</div>
+                <div style="font-size: 15px; font-weight: 600; margin-bottom: 12px;">📋 แก้ไขรายการงาน (กด ✓ เพื่อเปลี่ยนสถานะ | กด - เพื่อลบ)</div>
                 <div class="work-card" id="adm-task-list"></div>
                 <button type="button" class="btn-add" onclick="addTask()">➕ เพิ่มงานใหม่</button>
             </div>
@@ -254,13 +257,13 @@
                 submitted: 3,
                 pending: 4,
                 tasks: [
-                    { w: "W1", text: "งานที่ 1 (รออัปเดตชื่อรายละเอียด)" },
-                    { w: "W2", text: "งานที่ 2 (รออัปเดตชื่อรายละเอียด)" },
-                    { w: "W3", text: "งานที่ 3 (รออัปเดตชื่อรายละเอียด)" },
-                    { w: "W4", text: "งานที่ 4 (รออัปเดตชื่อรายละเอียด)" },
-                    { w: "W5", text: "งานที่ 5 (รออัปเดตชื่อรายละเอียด)" },
-                    { w: "W6", text: "งานที่ 6 (รออัปเดตชื่อรายละเอียด)" },
-                    { w: "W7", text: "งานที่ 7 (รออัปเดตชื่อรายละเอียด)" }
+                    { w: "W1", text: "งานที่ 1 (รออัปเดตชื่อรายละเอียด)", completed: true },
+                    { w: "W2", text: "งานที่ 2 (รออัปเดตชื่อรายละเอียด)", completed: true },
+                    { w: "W3", text: "งานที่ 3 (รออัปเดตชื่อรายละเอียด)", completed: true },
+                    { w: "W4", text: "งานที่ 4 (รออัปเดตชื่อรายละเอียด)", completed: false },
+                    { w: "W5", text: "งานที่ 5 (รออัปเดตชื่อรายละเอียด)", completed: false },
+                    { w: "W6", text: "งานที่ 6 (รออัปเดตชื่อรายละเอียด)", completed: false },
+                    { w: "W7", text: "งานที่ 7 (รออัปเดตชื่อรายละเอียด)", completed: false }
                 ]
             }
         };
@@ -270,6 +273,12 @@
             let saved = JSON.parse(localStorage.getItem('schoolAppData'));
             if (saved && saved["26490"] && saved["26490"].tasks) {
                 schoolData = saved;
+                // ตรวจสอบความปลอดภัยให้ทุก task มีค่า completed
+                for (const id in schoolData) {
+                    schoolData[id].tasks.forEach(t => {
+                        if (t.completed === undefined) t.completed = false;
+                    });
+                }
             } else {
                 schoolData = defaultData;
                 localStorage.setItem('schoolAppData', JSON.stringify(defaultData));
@@ -295,7 +304,6 @@
             }
         }
 
-        // ฟังก์ชันเปิด-ปิดตา (Toggle Password)
         function togglePasswordVisibility(inputId) {
             const passwordInput = document.getElementById(inputId);
             if (passwordInput.type === 'password') {
@@ -328,7 +336,6 @@
 
         function logout() {
             document.querySelectorAll('input').forEach(input => input.value = '');
-            // รีเซ็ต type ของ input รหัสผ่านให้กลับเป็นซ่อนดาว/จุด
             document.getElementById('stu-pass').type = 'password';
             document.getElementById('adm-pass').type = 'password';
             currentEditingStudent = null;
@@ -351,7 +358,7 @@
                 const user = document.getElementById('adm-user').value;
                 const pass = document.getElementById('adm-pass').value;
                 
-                if (user === "11111" && pass === "1111") {
+                if (user === "11111" && pass === "11111") {
                     renderAdminStudentList();
                     goToPage('page-admin-list', true);
                 } else {
@@ -374,7 +381,7 @@
                 listContainer.innerHTML += `
                     <div class="work-item">
                         <div class="work-number">${task.w}</div>
-                        <div class="work-name">${task.text}</div>
+                        <div class="work-name">${task.text} ${task.completed ? '✅' : ''}</div>
                     </div>
                 `;
             });
@@ -424,10 +431,36 @@
                                 ${task.text}
                             </div>
                         </div>
-                        <button type="button" class="btn-delete" onclick="deleteTask(${index})">➖</button>
+                        <div class="admin-actions">
+                            <!-- ปุ่มติ๊กถูกสำหรับกดส่งงาน/ยกเลิกส่งงาน -->
+                            <button type="button" class="btn-check ${task.completed ? 'completed' : ''}" onclick="toggleTaskStatus(${index})" title="คลิกเพื่อเปลี่ยนสถานะงานส่ง">
+                                ✓
+                            </button>
+                            <!-- ปุ่มลบ -->
+                            <button type="button" class="btn-delete" onclick="deleteTask(${index})" title="ลบงานนี้">➖</button>
+                        </div>
                     </div>
                 `;
             });
+        }
+
+        // ฟังก์ชันสลับสถานะการส่งงาน เมื่อกดปุ่มติ๊กถูก
+        function toggleTaskStatus(index) {
+            const data = schoolData[currentEditingStudent];
+            data.tasks[index].completed = !data.tasks[index].completed;
+
+            if (data.tasks[index].completed) {
+                data.submitted = (data.submitted || 0) + 1;
+                data.pending = Math.max(0, (data.pending || 0) - 1);
+            } else {
+                data.submitted = Math.max(0, (data.submitted || 0) - 1);
+                data.pending = (data.pending || 0) + 1;
+            }
+
+            saveData();
+            renderAdminTaskList();
+            document.getElementById('edit-submitted').value = data.submitted;
+            document.getElementById('edit-pending').value = data.pending;
         }
 
         function updateStat(type, value) {
@@ -451,26 +484,51 @@
         function addTask() {
             const data = schoolData[currentEditingStudent];
             
-            let nextWNum = 1;
-            if (data.tasks.length > 0) {
-                const lastTaskW = data.tasks[data.tasks.length - 1].w; 
-                nextWNum = parseInt(lastTaskW.replace('W', '')) + 1;
-            }
-
+            // เพิ่มงานใหม่ในสถานะค้างส่ง (completed: false)
             data.tasks.push({
-                w: `W${nextWNum}`,
-                text: `งานที่ ${nextWNum} (รออัปเดตชื่อรายละเอียด)`
+                w: "", 
+                text: `งานที่ ${data.tasks.length + 1} (รออัปเดตชื่อรายละเอียด)`,
+                completed: false
             });
+            
+            // จัดเรียงลำดับ W ใหม่ทั้งหมดอัตโนมัติ
+            data.tasks.forEach((t, i) => {
+                t.w = `W${i + 1}`;
+            });
+
+            // เพิ่มจำนวนงานค้างให้อัตโนมัติ
+            data.pending = (data.pending || 0) + 1;
             
             saveData();
             renderAdminTaskList(); 
+            document.getElementById('edit-submitted').value = data.submitted;
+            document.getElementById('edit-pending').value = data.pending;
         }
 
         function deleteTask(index) {
-            if(confirm("ยืนยันการลบงานนี้?")) {
-                schoolData[currentEditingStudent].tasks.splice(index, 1);
+            if(confirm("ยืนยันการลบงานนี้? ลำดับงานทั้งหมดจะถูกจัดเรียงใหม่ให้อัตโนมัติ")) {
+                const data = schoolData[currentEditingStudent];
+                const deletedTask = data.tasks[index];
+
+                // หักลบสถิติตามสถานะงานที่ถูกลบไป
+                if (deletedTask.completed) {
+                    data.submitted = Math.max(0, (data.submitted || 0) - 1);
+                } else {
+                    data.pending = Math.max(0, (data.pending || 0) - 1);
+                }
+
+                // ลบงานออกจากรายการ
+                data.tasks.splice(index, 1);
+                
+                // จัดเรียงลำดับ W ใหม่ทั้งหมดอัตโนมัติ (เช่น W5 หายไป W6 จะขยับมาเป็น W5 ทันที)
+                data.tasks.forEach((t, i) => {
+                    t.w = `W${i + 1}`;
+                });
+                
                 saveData();
                 renderAdminTaskList(); 
+                document.getElementById('edit-submitted').value = data.submitted;
+                document.getElementById('edit-pending').value = data.pending;
             }
         }
     </script>
