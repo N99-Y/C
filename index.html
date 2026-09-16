@@ -16,6 +16,10 @@
             position: relative; 
             box-shadow: 0 4px 25px rgba(0,0,0,0.08); 
             overflow: hidden; 
+            /* เพิ่มขอบมนและเว้นระยะขอบรอบตัวในมือถือให้เหมือนคอม */
+            border-radius: 24px; 
+            margin: 15px; 
+            min-height: 95vh;
         }
 
         @media (min-width: 768px) { 
@@ -23,6 +27,7 @@
                 zoom: 1.25; 
                 margin: 20px 0; 
                 border-radius: 24px; 
+                min-height: auto;
             } 
         }
 
@@ -273,7 +278,6 @@
             let saved = JSON.parse(localStorage.getItem('schoolAppData'));
             if (saved && saved["26490"] && saved["26490"].tasks) {
                 schoolData = saved;
-                // ตรวจสอบความปลอดภัยให้ทุก task มีค่า completed
                 for (const id in schoolData) {
                     schoolData[id].tasks.forEach(t => {
                         if (t.completed === undefined) t.completed = false;
@@ -432,11 +436,9 @@
                             </div>
                         </div>
                         <div class="admin-actions">
-                            <!-- ปุ่มติ๊กถูกสำหรับกดส่งงาน/ยกเลิกส่งงาน -->
                             <button type="button" class="btn-check ${task.completed ? 'completed' : ''}" onclick="toggleTaskStatus(${index})" title="คลิกเพื่อเปลี่ยนสถานะงานส่ง">
                                 ✓
                             </button>
-                            <!-- ปุ่มลบ -->
                             <button type="button" class="btn-delete" onclick="deleteTask(${index})" title="ลบงานนี้">➖</button>
                         </div>
                     </div>
@@ -444,7 +446,6 @@
             });
         }
 
-        // ฟังก์ชันสลับสถานะการส่งงาน เมื่อกดปุ่มติ๊กถูก
         function toggleTaskStatus(index) {
             const data = schoolData[currentEditingStudent];
             data.tasks[index].completed = !data.tasks[index].completed;
@@ -484,19 +485,16 @@
         function addTask() {
             const data = schoolData[currentEditingStudent];
             
-            // เพิ่มงานใหม่ในสถานะค้างส่ง (completed: false)
             data.tasks.push({
                 w: "", 
                 text: `งานที่ ${data.tasks.length + 1} (รออัปเดตชื่อรายละเอียด)`,
                 completed: false
             });
             
-            // จัดเรียงลำดับ W ใหม่ทั้งหมดอัตโนมัติ
             data.tasks.forEach((t, i) => {
                 t.w = `W${i + 1}`;
             });
 
-            // เพิ่มจำนวนงานค้างให้อัตโนมัติ
             data.pending = (data.pending || 0) + 1;
             
             saveData();
@@ -510,17 +508,14 @@
                 const data = schoolData[currentEditingStudent];
                 const deletedTask = data.tasks[index];
 
-                // หักลบสถิติตามสถานะงานที่ถูกลบไป
                 if (deletedTask.completed) {
                     data.submitted = Math.max(0, (data.submitted || 0) - 1);
                 } else {
                     data.pending = Math.max(0, (data.pending || 0) - 1);
                 }
 
-                // ลบงานออกจากรายการ
                 data.tasks.splice(index, 1);
                 
-                // จัดเรียงลำดับ W ใหม่ทั้งหมดอัตโนมัติ (เช่น W5 หายไป W6 จะขยับมาเป็น W5 ทันที)
                 data.tasks.forEach((t, i) => {
                     t.w = `W${i + 1}`;
                 });
