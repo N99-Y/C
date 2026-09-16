@@ -272,7 +272,6 @@
             messagingSenderId: "899982510120",
             appId: "1:899982510120:web:872a2819279563ecce0d1d",
             measurementId: "G-4JDNPL5QHV",
-            // เติม databaseURL ให้แล้วครับ (อิงจากเซิร์ฟเวอร์สิงคโปร์)
             databaseURL: "https://page-computer-default-rtdb.asia-southeast1.firebasedatabase.app"
         };
         // ==========================================
@@ -306,7 +305,7 @@
             }
         };
 
-        // ดึงข้อมูลแบบ Real-time (ข้อมูลเปลี่ยน หน้าเว็บเปลี่ยนตามทันที!)
+        // ดึงข้อมูลแบบ Real-time
         document.getElementById('btn-login-stu').innerText = "กำลังเชื่อมต่อฐานข้อมูล...";
         
         db.ref('schoolData').on('value', (snapshot) => {
@@ -414,7 +413,10 @@
                 const user = document.getElementById('adm-user').value;
                 const pass = document.getElementById('adm-pass').value;
                 
-                if (user === "11111" && pass === "11111") {
+                // ---------------------------------------------------------
+                // เปลี่ยนรหัสผ่าน Admin ตรงนี้ (user = 11111, pass = 1111)
+                // ---------------------------------------------------------
+                if (user === "11111" && pass === "1111") {
                     renderAdminStudentList();
                     goToPage('page-admin-list', true);
                 } else {
