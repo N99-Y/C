@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบตรวจสอบงานและคะแนน</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 1. นำเข้า Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Prompt', sans-serif; }
         body { background-color: #dbeafe; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #333; }
@@ -151,7 +156,7 @@
                     <input type="password" id="stu-pass" placeholder="กรอก PIN 4 หลัก" required inputmode="numeric" oninput="validateNumber(this)">
                     <span class="toggle-password" onclick="togglePasswordVisibility('stu-pass')">👁️</span>
                 </div>
-                <button type="submit" class="btn-submit btn-student">เข้าสู่ระบบ</button>
+                <button type="submit" class="btn-submit btn-student" id="btn-login-stu">เข้าสู่ระบบ</button>
             </form>
         </div>
 
@@ -177,7 +182,7 @@
                     <input type="password" id="adm-pass" placeholder="กรอก PIN 4 หลัก" required inputmode="numeric" oninput="validateNumber(this)">
                     <span class="toggle-password" onclick="togglePasswordVisibility('adm-pass')">👁️</span>
                 </div>
-                <button type="submit" class="btn-submit btn-admin">เข้าสู่ระบบ Admin</button>
+                <button type="submit" class="btn-submit btn-admin" id="btn-login-adm">เข้าสู่ระบบ Admin</button>
             </form>
         </div>
 
@@ -256,6 +261,31 @@
     </div>
 
     <script>
+        // ==========================================
+        // 2. ตั้งค่า Firebase 
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDlFBaXhENWdTxexBIujLPzI4E8y6suzP0",
+            authDomain: "page-computer.firebaseapp.com",
+            projectId: "page-computer",
+            storageBucket: "page-computer.firebasestorage.app",
+            messagingSenderId: "899982510120",
+            appId: "1:899982510120:web:872a2819279563ecce0d1d",
+            measurementId: "G-4JDNPL5QHV",
+            // เติม databaseURL ให้แล้วครับ (อิงจากเซิร์ฟเวอร์สิงคโปร์)
+            databaseURL: "https://page-computer-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+        // ==========================================
+
+        // เริ่มต้นเชื่อมต่อฐานข้อมูล
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let schoolData = {};
+        let currentEditingStudent = null; 
+        let currentLoggedInStudent = null;
+
+        // ค่าเริ่มต้น ถ้าระบบยังไม่มีข้อมูลเลย
         const defaultData = {
             "26490": {
                 id: "26490",
@@ -276,31 +306,48 @@
             }
         };
 
-        let schoolData;
-        try {
-            let saved = JSON.parse(localStorage.getItem('schoolAppData'));
-            if (saved && saved["26490"] && saved["26490"].tasks) {
-                schoolData = saved;
+        // ดึงข้อมูลแบบ Real-time (ข้อมูลเปลี่ยน หน้าเว็บเปลี่ยนตามทันที!)
+        document.getElementById('btn-login-stu').innerText = "กำลังเชื่อมต่อฐานข้อมูล...";
+        
+        db.ref('schoolData').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                schoolData = data;
+                
+                // ตรวจสอบโครงสร้าง
                 for (const id in schoolData) {
+                    if(!schoolData[id].tasks) schoolData[id].tasks = [];
                     schoolData[id].tasks.forEach(t => {
                         if (t.completed === undefined) t.completed = false;
                     });
                 }
             } else {
                 schoolData = defaultData;
-                localStorage.setItem('schoolAppData', JSON.stringify(defaultData));
+                db.ref('schoolData').set(defaultData); // เซฟค่าเริ่มต้นขึ้นออนไลน์
             }
-        } catch(e) {
-            schoolData = defaultData;
-            localStorage.setItem('schoolAppData', JSON.stringify(defaultData));
-        }
 
-        let currentEditingStudent = null; 
+            document.getElementById('btn-login-stu').innerText = "เข้าสู่ระบบ";
 
+            // อัปเดตหน้าจออัตโนมัติ ถ้ามีคนเปิดค้างไว้
+            if (document.getElementById('page-admin-list').classList.contains('active')) {
+                renderAdminStudentList();
+            }
+            if (currentEditingStudent && document.getElementById('page-admin-edit').classList.contains('active')) {
+                renderAdminTaskList();
+            }
+            if (currentLoggedInStudent && document.getElementById('page-dashboard-student').classList.contains('active')) {
+                renderStudentDashboard(currentLoggedInStudent);
+            }
+        });
+
+        // ฟังก์ชันเซฟข้อมูลขึ้นออนไลน์
         function saveData() {
-            localStorage.setItem('schoolAppData', JSON.stringify(schoolData));
+            db.ref('schoolData').set(schoolData);
         }
 
+        // ==========================================
+        // ฟังก์ชันต่างๆ (UI และระบบภายใน)
+        // ==========================================
         function toggleMenu(menuId) {
             const menu = document.getElementById(menuId);
             if(menu.style.display === 'block') {
@@ -346,6 +393,7 @@
             document.getElementById('stu-pass').type = 'password';
             document.getElementById('adm-pass').type = 'password';
             currentEditingStudent = null;
+            currentLoggedInStudent = null;
             goToPage('page-login-student', true);
         }
 
@@ -356,6 +404,7 @@
                 const pass = document.getElementById('stu-pass').value;
                 
                 if (schoolData[user] && schoolData[user].pin === pass) {
+                    currentLoggedInStudent = user; 
                     renderStudentDashboard(user);
                     goToPage('page-dashboard-student', true);
                 } else {
@@ -376,6 +425,7 @@
 
         function renderStudentDashboard(studentId) {
             const data = schoolData[studentId];
+            if(!data) return;
             document.getElementById('stu-name-display').innerText = data.name;
             document.getElementById('stu-info-display').innerText = data.info;
             document.getElementById('stu-submitted-display').innerText = `${data.submitted} งาน`;
@@ -412,7 +462,6 @@
             }
         }
 
-        // ฟังก์ชันเพิ่มนักเรียนใหม่ (สำหรับ Admin)
         function addStudent() {
             const id = prompt("กรอกเลขประจำตัวนักเรียน (เช่น 5 หลัก):");
             if (!id || !id.trim()) return;
@@ -426,7 +475,6 @@
             if (!name || !name.trim()) return;
             const info = prompt("กรอกข้อมูลห้อง/เลขที่:", `ชั้น ม.1/1 • เลขที่ 1 • เลขประจำตัว ${id}`);
 
-            // กำหนดงานเริ่มต้น 7 งาน (ค่าเริ่มต้นเป็นยังไม่ส่ง)
             const initialTasks = [];
             for (let i = 1; i <= 7; i++) {
                 initialTasks.push({
@@ -447,7 +495,6 @@
             };
 
             saveData();
-            renderAdminStudentList();
             alert("เพิ่มนักเรียนสำเร็จเรียบร้อยแล้ว!");
         }
 
@@ -465,6 +512,7 @@
 
         function renderAdminTaskList() {
             const data = schoolData[currentEditingStudent];
+            if(!data) return;
             const listContainer = document.getElementById('adm-task-list');
             listContainer.innerHTML = '';
             
@@ -486,6 +534,8 @@
                     </div>
                 `;
             });
+            document.getElementById('edit-submitted').value = data.submitted;
+            document.getElementById('edit-pending').value = data.pending;
         }
 
         function toggleTaskStatus(index) {
@@ -501,9 +551,6 @@
             }
 
             saveData();
-            renderAdminTaskList();
-            document.getElementById('edit-submitted').value = data.submitted;
-            document.getElementById('edit-pending').value = data.pending;
         }
 
         function updateStat(type, value) {
@@ -520,7 +567,6 @@
             if (newText !== null && newText.trim() !== "") {
                 data.tasks[index].text = newText;
                 saveData();
-                renderAdminTaskList(); 
             }
         }
 
@@ -540,9 +586,6 @@
             data.pending = (data.pending || 0) + 1;
             
             saveData();
-            renderAdminTaskList(); 
-            document.getElementById('edit-submitted').value = data.submitted;
-            document.getElementById('edit-pending').value = data.pending;
         }
 
         function deleteTask(index) {
@@ -563,9 +606,6 @@
                 });
                 
                 saveData();
-                renderAdminTaskList(); 
-                document.getElementById('edit-submitted').value = data.submitted;
-                document.getElementById('edit-pending').value = data.pending;
             }
         }
     </script>
