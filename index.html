@@ -16,7 +16,6 @@
             position: relative; 
             box-shadow: 0 4px 25px rgba(0,0,0,0.08); 
             overflow: hidden; 
-            /* เพิ่มขอบมนและเว้นระยะขอบรอบตัวในมือถือให้เหมือนคอม */
             border-radius: 24px; 
             margin: 15px; 
             min-height: 95vh;
@@ -216,6 +215,10 @@
                 <h2>รายชื่อนักเรียนทั้งหมด</h2>
             </div>
             <div id="admin-student-list"></div>
+            <!-- ปุ่มเพิ่มนักเรียนใหม่ -->
+            <div style="padding: 0 20px;">
+                <button type="button" class="btn-add" onclick="addStudent()">➕ เพิ่มนักเรียนใหม่</button>
+            </div>
         </div>
 
         <!-- ================= 5. หน้า แก้ไขข้อมูลนักเรียน (Admin) ================= -->
@@ -407,6 +410,45 @@
                     </div>
                 `;
             }
+        }
+
+        // ฟังก์ชันเพิ่มนักเรียนใหม่ (สำหรับ Admin)
+        function addStudent() {
+            const id = prompt("กรอกเลขประจำตัวนักเรียน (เช่น 5 หลัก):");
+            if (!id || !id.trim()) return;
+            if (schoolData[id]) {
+                alert("เลขประจำตัวนี้มีอยู่ในระบบแล้ว!");
+                return;
+            }
+            const pin = prompt("กรอก PIN 4 หลักสำหรับนักเรียน:");
+            if (!pin || !pin.trim()) return;
+            const name = prompt("กรอกชื่อ-นามสกุลนักเรียน (เช่น ด.ช.สมชาย ใจดี):");
+            if (!name || !name.trim()) return;
+            const info = prompt("กรอกข้อมูลห้อง/เลขที่:", `ชั้น ม.1/1 • เลขที่ 1 • เลขประจำตัว ${id}`);
+
+            // กำหนดงานเริ่มต้น 7 งาน (ค่าเริ่มต้นเป็นยังไม่ส่ง)
+            const initialTasks = [];
+            for (let i = 1; i <= 7; i++) {
+                initialTasks.push({
+                    w: `W${i}`,
+                    text: `งานที่ ${i} (รออัปเดตชื่อรายละเอียด)`,
+                    completed: false
+                });
+            }
+
+            schoolData[id] = {
+                id: id,
+                pin: pin,
+                name: name,
+                info: info || `เลขประจำตัว ${id}`,
+                submitted: 0,
+                pending: 7,
+                tasks: initialTasks
+            };
+
+            saveData();
+            renderAdminStudentList();
+            alert("เพิ่มนักเรียนสำเร็จเรียบร้อยแล้ว!");
         }
 
         function openAdminEdit(studentId) {
