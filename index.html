@@ -6,10 +6,8 @@
     <title>ระบบตรวจสอบงานและคะแนน</title>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- นำเข้า Firebase และ GSAP (สำหรับทำแอนิเมชันลูกตากลอกตามเมาส์) -->
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Prompt', sans-serif; }
@@ -21,13 +19,7 @@
         .menu-dropdown { display: none; position: absolute; top: 60px; left: 20px; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border-radius: 12px; padding: 10px; z-index: 999; min-width: 180px; }
         .menu-dropdown button { background: none; border: none; padding: 10px 15px; font-size: 14px; width: 100%; text-align: left; cursor: pointer; border-radius: 8px; color: #2b6cb0; font-weight: 600; }
         .menu-dropdown button:hover { background: #f3f6fc; }
-        .login-wrapper { padding: 40px 30px; background: #ffffff; align-items: center; width: 100%; }
-        
-        /* สไตล์กล่องดวงตาขยับตามเมาส์ */
-        .eyes-container { display: flex; gap: 12px; margin-bottom: 15px; }
-        .eye { width: 35px; height: 35px; background: #edf2f7; border: 2px solid #cbd5e1; border-radius: 50%; display: flex; justify-content: center; align-items: center; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.06); }
-        .pupil { width: 14px; height: 14px; background: #2b6cb0; border-radius: 50%; position: absolute; }
-
+        .login-wrapper { padding: 50px 30px; background: #ffffff; align-items: center; width: 100%; }
         .icon-box { width: 80px; height: 80px; border-radius: 22px; display: flex; justify-content: center; align-items: center; font-size: 40px; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(43, 108, 176, 0.2); }
         .icon-student { background: linear-gradient(135deg, #4da3ff 0%, #2b6cb0 100%); }
         .icon-admin { background: linear-gradient(135deg, #f6ad55 0%, #dd6b20 100%); box-shadow: 0 10px 20px rgba(221, 107, 32, 0.2); }
@@ -52,7 +44,7 @@
         .work-list-section { padding: 20px; } .work-card { background: white; border-radius: 15px; padding: 10px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
         .work-item { padding: 12px 0; border-bottom: 1px solid #edf2f7; display: flex; align-items: center; justify-content: space-between; } .work-item-left { display: flex; align-items: center; flex: 1; }
         .work-number { font-weight: 600; color: #4a5568; width: 45px; } .work-name { color: #2d3748; font-size: 14px; flex: 1; cursor: pointer; padding-right: 10px; }
-        .admin-edit-hint { font-size: 11px; color: #ed8936; margin-bottom: 10px; text-align: center; } .admin-actions { display: flex; gap: 6px; align-items: center; }
+        .admin-actions { display: flex; gap: 6px; align-items: center; }
         .btn-delete { background: #fee2e2; color: #ef4444; border: none; width: 30px; height: 30px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .btn-check { background: #f1f5f9; color: #cbd5e1; border: 1px solid #cbd5e1; width: 30px; height: 30px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .btn-check.completed { background: #dcfce7; color: #22c55e; border-color: #22c55e; }
@@ -68,12 +60,7 @@
             <button type="button" class="hamburger-btn" onclick="toggleMenu('menu-student')">☰</button>
             <div class="menu-dropdown" id="menu-student"><button type="button" onclick="switchToAdminLogin()">👨‍🏫 เข้าสู่ระบบ Admin</button></div>
             
-            <!-- ลูกตาขยับตามเมาส์ -->
-            <div class="eyes-container">
-                <div class="eye"><div class="pupil"></div></div>
-                <div class="eye"><div class="pupil"></div></div>
-            </div>
-
+            <div class="icon-box icon-student">🎓</div>
             <div class="login-title"><h1>ระบบตรวจสอบงานและคะแนน</h1><p>สำหรับนักเรียน</p></div>
             <form onsubmit="handleLogin(event, 'student')" style="width: 100%;">
                 <div class="form-group"><label>เลขประจำตัวนักเรียน</label><input type="text" id="stu-user" placeholder="กรอกเลข 5 หลัก" required inputmode="numeric" oninput="validateNumber(this)"></div>
@@ -114,8 +101,8 @@
         <!-- Admin Edit Page -->
         <div id="page-admin-edit" class="page dashboard-wrapper">
             <div class="header header-admin"><button type="button" class="btn-logout" style="right: auto; left: 20px; top: 20px;" onclick="goToPage('page-admin-list', false)">⬅ กลับ</button><p style="margin-top: 25px;">โหมดแก้ไขข้อมูล</p><h2 id="adm-name-display">ชื่อนักเรียน</h2></div>
-            <p class="admin-edit-hint">💡 แตะที่ชื่อรายละเอียดงาน เพื่อแก้ไขข้อความ</p>
-            <div class="stats-grid">
+            
+            <div class="stats-grid" style="margin-top: 15px;">
                 <div class="stat-card"><p style="font-size: 11px; color: #718096;">แก้ไขงานส่งแล้ว</p><div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;"><input type="number" id="edit-submitted" onchange="updateStat('submitted', this.value)"> <span style="font-size: 13px; font-weight: bold;">งาน</span></div></div>
                 <div class="stat-card"><p style="font-size: 11px; color: #718096;">แก้ไขงานค้างส่ง</p><div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;"><input type="number" id="edit-pending" onchange="updateStat('pending', this.value)"> <span style="font-size: 13px; font-weight: bold; color: #e53e3e;">งาน</span></div></div>
             </div>
@@ -123,30 +110,8 @@
         </div>
     </div>
 
-    <!-- โค้ด JavaScript ทั้งหมด (รวมระบบ GSAP ลูกตาขยับ) -->
+    <!-- โค้ด JavaScript ที่ถูกบีบอัดและทำให้อ่านยาก (Minified & Obfuscated) -->
     <script>
-        // ฟังก์ชันเอฟเฟกต์ลูกตากลอกตามเมาส์
-        let reset;
-        const MOVE_EYE = ({ x, y }) => {
-            if (reset) reset.kill();
-            reset = gsap.delayedCall(2, () => {
-                gsap.to('.pupil', { x: 0, y: 0, duration: 0.2 });
-            });
-            document.querySelectorAll('.eye').forEach(EYE => {
-                const BOUNDS = EYE.getBoundingClientRect();
-                const pupil = EYE.querySelector('.pupil');
-                gsap.set(pupil, {
-                    x: gsap.utils.clamp(-8, 8, (x - (BOUNDS.x + BOUNDS.width / 2)) * 0.2),
-                    y: gsap.utils.clamp(-8, 8, (y - (BOUNDS.y + BOUNDS.height / 2)) * 0.2)
-                });
-            });
-        };
-        window.addEventListener('mousemove', (e) => MOVE_EYE({ x: e.clientX, y: e.clientY }));
-        window.addEventListener('touchmove', (e) => {
-            if(e.touches.length > 0) MOVE_EYE({ x: e.touches[0].clientX, y: e.touches[0].clientY });
-        });
-
-        // ระบบฐานข้อมูลและเว็บเดิมของคุณ
         const firebaseConfig={apiKey:"AIzaSyDlFBaXhENWdTxexBIujLPzI4E8y6suzP0",authDomain:"page-computer.firebaseapp.com",projectId:"page-computer",storageBucket:"page-computer.firebasestorage.app",messagingSenderId:"899982510120",appId:"1:899982510120:web:872a2819279563ecce0d1d",measurementId:"G-4JDNPL5QHV",databaseURL:"https://page-computer-default-rtdb.asia-southeast1.firebasedatabase.app"};firebase.initializeApp(firebaseConfig);const db=firebase.database();let schoolData={},adminsData={},currentEditingStudent=null,currentLoggedInStudent=null;const defaultData={"26490":{id:"26490",pin:"9999",name:"ด.ช.ณัฏฐ์วรัชญ์ มาดีประเสริฐ",info:"ชั้น ม.1/14 • เลขที่ 6 • เลขประจำตัว 26490",submitted:3,pending:4,tasks:[{w:"W1",text:"งานที่ 1 (รออัปเดตชื่อรายละเอียด)",completed:!0},{w:"W2",text:"งานที่ 2 (รออัปเดตชื่อรายละเอียด)",completed:!0},{w:"W3",text:"งานที่ 3 (รออัปเดตชื่อรายละเอียด)",completed:!0},{w:"W4",text:"งานที่ 4 (รออัปเดตชื่อรายละเอียด)",completed:!1},{w:"W5",text:"งานที่ 5 (รออัปเดตชื่อรายละเอียด)",completed:!1},{w:"W6",text:"งานที่ 6 (รออัปเดตชื่อรายละเอียด)",completed:!1},{w:"W7",text:"งานที่ 7 (รออัปเดตชื่อรายละเอียด)",completed:!1}]}};const defaultAdmins={"11111":{pin:"1111"}};document.getElementById('btn-login-stu').innerText="กำลังเชื่อมต่อระบบ...";db.ref('schoolData').on('value',s=>{let d=s.val();if(d){schoolData=d;for(const i in schoolData){if(!schoolData[i].tasks)schoolData[i].tasks=[];schoolData[i].tasks.forEach(t=>{if(t.completed===undefined)t.completed=!1})}}else{schoolData=defaultData;db.ref('schoolData').set(defaultData)}document.getElementById('btn-login-stu').innerText="เข้าสู่ระบบ";if(document.getElementById('page-admin-list').classList.contains('active'))renderAdminStudentList();if(currentEditingStudent&&document.getElementById('page-admin-edit').classList.contains('active'))renderAdminTaskList();if(currentLoggedInStudent&&document.getElementById('page-dashboard-student').classList.contains('active'))renderStudentDashboard(currentLoggedInStudent)});db.ref('admins').on('value',s=>{let d=s.val();if(d)adminsData=d;else{adminsData=defaultAdmins;db.ref('admins').set(defaultAdmins)}});function saveData(){db.ref('schoolData').set(schoolData)}function toggleMenu(m){const e=document.getElementById(m);if(e.style.display==='block')e.style.display='none';else{document.querySelectorAll('.menu-dropdown').forEach(x=>x.style.display='none');e.style.display='block'}}function togglePasswordVisibility(i){const p=document.getElementById(i);if(p.type==='password')p.type='text';else p.type='password'}function switchToAdminLogin(){document.getElementById('menu-student').style.display='none';goToPage('page-login-admin',!0)}function switchToStudentLogin(){document.getElementById('menu-admin').style.display='none';goToPage('page-login-student',!0)}function goToPage(p,s=!1){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(p).classList.add('active');document.querySelectorAll('.menu-dropdown').forEach(m=>m.style.display='none');if(s)window.scrollTo(0,0)}function validateNumber(i){i.value=i.value.replace(/[^0-9]/g,'')}function logout(){document.querySelectorAll('input').forEach(i=>i.value='');document.getElementById('stu-pass').type='password';document.getElementById('adm-pass').type='password';currentEditingStudent=null;currentLoggedInStudent=null;goToPage('page-login-student',!0)}function handleLogin(e,t){e.preventDefault();if(t==='student'){const u=document.getElementById('stu-user').value;const p=document.getElementById('stu-pass').value;if(schoolData[u]&&schoolData[u].pin===p){currentLoggedInStudent=u;renderStudentDashboard(u);goToPage('page-dashboard-student',!0)}else alert("เลขประจำตัวหรือรหัสผ่านนักเรียนไม่ถูกต้อง")}else if(t==='admin'){const u=document.getElementById('adm-user').value;const p=document.getElementById('adm-pass').value;if(adminsData[u]&&adminsData[u].pin===p){renderAdminStudentList();goToPage('page-admin-list',!0)}else alert("เลขประจำตัวครูหรือรหัสผ่านไม่ถูกต้อง")}}function renderStudentDashboard(s){const d=schoolData[s];if(!d)return;document.getElementById('stu-name-display').innerText=d.name;document.getElementById('stu-info-display').innerText=d.info;document.getElementById('stu-submitted-display').innerText=`${d.submitted} งาน`;document.getElementById('stu-pending-display').innerText=`${d.pending} งาน`;const l=document.getElementById('stu-task-list');l.innerHTML='';d.tasks.forEach(t=>{l.innerHTML+=`<div class="work-item"><div class="work-number">${t.w}</div><div class="work-name">${t.text} ${t.completed?'✅':''}</div></div>`})}function renderAdminStudentList(){const l=document.getElementById('admin-student-list');l.innerHTML='';for(const i in schoolData){const s=schoolData[i];l.innerHTML+=`<div class="student-list-item" onclick="openAdminEdit('${i}')"><div><div style="font-weight: bold; color: #1a202c;">${s.name}</div><div style="font-size: 12px; color: #718096;">เลขประจำตัว: ${i}</div></div><div style="color: #2b6cb0;">✏️ แก้ไข ➔</div></div>`}}function addStudent(){const i=prompt("กรอกเลขประจำตัวนักเรียน (เช่น 5 หลัก):");if(!i||!i.trim())return;if(schoolData[i]){alert("เลขประจำตัวนี้มีอยู่ในระบบแล้ว!");return}const p=prompt("กรอก PIN 4 หลักสำหรับนักเรียน:");if(!p||!p.trim())return;const n=prompt("กรอกชื่อ-นามสกุลนักเรียน (เช่น ด.ช.สมชาย ใจดี):");if(!n||!n.trim())return;const f=prompt("กรอกข้อมูลห้อง/เลขที่:",`ชั้น ม.1/1 • เลขที่ 1 • เลขประจำตัว ${i}`);const k=[];for(let j=1;j<=7;j++)k.push({w:`W${j}`,text:`งานที่ ${j} (รออัปเดตชื่อรายละเอียด)`,completed:!1});schoolData[i]={id:i,pin:p,name:n,info:f||`เลขประจำตัว ${i}`,submitted:0,pending:7,tasks:k};saveData();alert("เพิ่มนักเรียนสำเร็จเรียบร้อยแล้ว!")}function openAdminEdit(s){currentEditingStudent=s;const d=schoolData[s];document.getElementById('adm-name-display').innerText=d.name;document.getElementById('edit-submitted').value=d.submitted;document.getElementById('edit-pending').value=d.pending;renderAdminTaskList();goToPage('page-admin-edit',!0)}function renderAdminTaskList(){const d=schoolData[currentEditingStudent];if(!d)return;const l=document.getElementById('adm-task-list');l.innerHTML='';d.tasks.forEach((t,i)=>{l.innerHTML+=`<div class="work-item"><div class="work-item-left" onclick="editTaskText(${i})"><div class="work-number">${t.w}</div><div class="work-name" style="text-decoration: underline dashed #ccc; color: #2b6cb0;">${t.text}</div></div><div class="admin-actions"><button type="button" class="btn-check ${t.completed?'completed':''}" onclick="toggleTaskStatus(${i})" title="คลิกเพื่อเปลี่ยนสถานะงานส่ง">✓</button><button type="button" class="btn-delete" onclick="deleteTask(${i})" title="ลบงานนี้">➖</button></div></div>`});document.getElementById('edit-submitted').value=d.submitted;document.getElementById('edit-pending').value=d.pending}function toggleTaskStatus(i){const d=schoolData[currentEditingStudent];d.tasks[i].completed=!d.tasks[i].completed;if(d.tasks[i].completed){d.submitted=(d.submitted||0)+1;d.pending=Math.max(0,(d.pending||0)-1)}else{d.submitted=Math.max(0,(d.submitted||0)-1);d.pending=(d.pending||0)+1}saveData()}function updateStat(t,v){if(!currentEditingStudent)return;schoolData[currentEditingStudent][t]=parseInt(v)||0;saveData()}function editTaskText(i){const d=schoolData[currentEditingStudent];const o=d.tasks[i].text;const n=prompt(`แก้ไขชื่อ ${d.tasks[i].w}:`,o);if(n!==null&&n.trim()!==""){d.tasks[i].text=n;saveData()}}function addTask(){const d=schoolData[currentEditingStudent];d.tasks.push({w:"",text:`งานที่ ${d.tasks.length+1} (รออัปเดตชื่อรายละเอียด)`,completed:!1});d.tasks.forEach((t,i)=>{t.w=`W${i+1}`});d.pending=(d.pending||0)+1;saveData()}function deleteTask(i){if(confirm("ยืนยันการลบงานนี้? ลำดับงานทั้งหมดจะถูกจัดเรียงใหม่ให้อัตโนมัติ")){const d=schoolData[currentEditingStudent];const k=d.tasks[i];if(k.completed)d.submitted=Math.max(0,(d.submitted||0)-1);else d.pending=Math.max(0,(d.pending||0)-1);d.tasks.splice(i,1);d.tasks.forEach((t,j)=>{t.w=`W${j+1}`});saveData()}}
     </script>
 </body>
